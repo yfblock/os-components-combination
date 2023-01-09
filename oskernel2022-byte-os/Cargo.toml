@@ -1,0 +1,15 @@
+[workspace]
+members = [
+    "kernel-entry",
+    "kernel",
+    "fatfs",
+    "linux-syscall",
+    "task_scheduler",
+    "output",
+    "arch"
+]
+# default-members = ["kernel"]
+
+[profile.release]
+lto = true
+debug = true

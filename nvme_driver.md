@@ -128,3 +128,44 @@ nvme.write_block(i, &write_buf);
 ```
 
 > Easy end! 🎉🎉🎉
+
+## try to use it in byteos
+
+Follow the logic above. If I want to use nvme with byteos. I just need to adjust the initialization code and change the read and write code from virtio-blk to nvme.
+
+### step 1 Download byteos locally
+
+__folder:__ oskernel2022-byte-os
+
+### step 2 Test 
+
+```shell
+cd oskernel2022-byte-os
+make run
+```
+
+### step 3 Run with nvme image
+
+add run command to Makefile
+```shell
+    run-nvme: qemu
+	@cp fs-origin.img nvme.img
+	@qemu-system-riscv64 \
+            -machine virt \
+            -bios $(BOOTLOADER) \
+            -device loader,file=$(BIN_FILE),addr=0x80200000 \
+			-drive file=nvme.img,if=none,id=nvm \
+			-device nvme,serial=deadbeef,drive=nvm \
+			-kernel $(BIN_FILE) \
+			-nographic \
+			-smp 4 -m 128m
+	@rm nvme.img    
+```
+
+### step 4 Modify source code to adapt nvme
+
+> add dependency to Cargo.toml
+
+```toml
+
+```

@@ -91,7 +91,6 @@ run-nvme: qemu
 	@qemu-system-riscv64 \
             -machine virt \
             -bios $(BOOTLOADER) \
-            -device loader,file=$(BIN_FILE),addr=0x80200000 \
 			-drive file=nvme.img,if=none,id=nvm \
 			-device nvme,serial=deadbeef,drive=nvm \
 			-kernel $(BIN_FILE) \

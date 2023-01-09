@@ -129,6 +129,166 @@ nvme.write_block(i, &write_buf);
 
 > Easy end! 🎉🎉🎉
 
+## try to use it in bare-metal os
+
+> get bare-metal from [try_async_bare_metal_os](https://github.com/yfblock/try_async_bare_metal_os)
+
+__local folder:__ bare_metal
+
+### step 1 Add dependency to cargo.toml
+
+```toml
+nvme_driver = { path = "../nvme_driver" }
+```
+
+### step 2 Use nvme instead of virtio
+
+
+Crate a `block` folder and add `virtio.rs` and `nvme.rs`.
+
+Create a `BlockDevice` trait as a compatibility layer.
+
+```rust
+pub trait BlockDevice {
+    // read_block
+    fn read_block(&mut self, sector_offset: usize, buf: &mut [u8]);
+    // write_block
+    fn write_block(&mut self, sector_offset: usize, buf: &[u8]);
+    // handle_irq
+    fn handle_irq(&mut self);
+}
+```
+
+Define a global variable in `block/mod.rs`
+
+```rust
+pub static mut DEVICE: Once<Mutex<Box<dyn BlockDevice>>> = Once::new();
+```
+
+And define the `struct` and `init` function in each file.
+
+> nvme.rs
+
+```rust
+...
+
+// 虚拟IO设备
+pub struct VirtIOBlock(pub NvmeInterface::<DmaAllocatorImpl, IrqControllerImpl>);
+
+impl BlockDevice for VirtIOBlock {
+    fn read_block(&mut self, sector_offset: usize, buf: &mut [u8]) {
+        // 读取文件
+        self.0.read_block(sector_offset, buf)
+    }
+
+    fn write_block(&mut self, sector_offset: usize, buf: &[u8]) {
+        self.0.write_block(sector_offset, buf)
+    }
+
+    fn handle_irq(&mut self) {
+        todo!()
+    }
+}
+
+...
+pub fn init() {
+    // 初始化 pci
+    config_pci();
+
+    unsafe {
+        // 创建存储设备
+        DEVICE.call_once(|| {
+            let device = Box::new(VirtIOBlock(
+                NvmeInterface::<DmaAllocatorImpl, IrqControllerImpl>::new(0x40000000)
+            ));
+            Mutex::new(device)
+        });
+    }
+}
+```
+
+> virtio.rs
+
+```rust
+...
+
+pub struct VirtIOBlock(pub VirtIOBlk::<HalImpl, MmioTransport>);
+
+impl BlockDevice for VirtIOBlock {
+    fn read_block(&mut self, sector_offset: usize, buf: &mut [u8]) {
+        self.0.read_block(sector_offset, buf);
+    }
+
+    fn write_block(&mut self, sector_offset: usize, buf: &[u8]) {
+        self.0.write_block(sector_offset, buf);
+    }
+
+    fn handle_irq(&mut self) {
+        todo!()
+    }
+}
+
+pub fn init() {
+    unsafe {
+        DEVICE.call_once(|| {
+            let header = NonNull::new(0x10001000 as *mut VirtIOHeader).unwrap();
+            let transport = unsafe { MmioTransport::new(header) }.unwrap();
+            let device = VirtIOBlk::<HalImpl, MmioTransport>::new(transport)
+                .expect("failed to create blk driver");
+            Mutex::new(Box::new(VirtIOBlock(device)))
+        });
+    }
+}
+```
+
+And then you can select the driver which will be used in `mod.rs` file.
+
+```rust
+mod virtio;
+mod nvme;
+
+use alloc::boxed::Box;
+use spin::Once;
+
+// use virtio as block driver
+// pub use virtio::init;
+
+// use nvme as block driver
+pub use nvme::init;
+
+pub static mut DEVICE: Once<Mutex<Box<dyn BlockDevice>>> = Once::new();
+```
+
+### step 3 Add run command to makefile
+
+```shell
+run-nvme: all
+	qemu-system-riscv64 \
+    -machine virt \
+    -bios default \
+    -drive file=fat32.img,if=none,id=nvm \
+    -device nvme,serial=deadbeef,drive=nvm \
+    -kernel kernel-qemu \
+    -nographic \
+    -smp 4 -m 2G
+```
+
+### step 4 Copy fat32.img file from oskernel2022-byte-os
+
+```shell
+    cp ../oskernel2022-byte-os/fs-origin.img fat32.img
+```
+
+### step 5 run test
+
+```plain
+程序大小为: 220 kb  堆大小: 128 kb  代码段: 60 kb
+Hello nvme
+async number: 42
+async number: 42
+Hello WOrld!
+```
+
 ## try to use it in byteos
 
 Follow the logic above. If I want to use nvme with byteos. I just need to adjust the initialization code and change the read and write code from virtio-blk to nvme.

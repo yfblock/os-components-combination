@@ -44,24 +44,13 @@ pub trait BlockDevice {
     fn handle_irq(&mut self);
 }
 
-pub fn add_virt_io(virtio: usize) {
-    // 创建存储设备
-    let device = Box::new(VirtIOBlock(
-        VirtIOBlk::new(unsafe {&mut *(virtio as *mut VirtIOHeader)}).expect("failed to create blk driver")
-    ));
-    // 加入设备表
-    unsafe {
-        BLK_CONTROL.push(device)
-    };
-}
-
 // 初始化函数
 pub fn init() {
     info!("初始化设备");
     #[cfg(not(feature = "board_k210"))]
     {
         // qemu 时添加 储存设备
-        add_virt_io(VIRTIO0);
+        block::init();
     }
 }
 

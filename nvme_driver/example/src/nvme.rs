@@ -123,8 +123,6 @@ pub fn nvme_test(){
     config_pci();
     let nvme = NvmeInterface::<DmaProvider, IrqProvider>::new(0x40000000);
 
-    
-        
     for i in 0..5{
         let mut read_buf = [0u8; 512];
         let buff = [i as u8;512];

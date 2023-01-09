@@ -106,6 +106,7 @@ dependencies = [
 [[package]]
 name = "fatfs"
 version = "0.4.0"
+source = "git+https://github.com/rafalh/rust-fatfs#7372a6432939010059081a5493f3a64da76d5a3c"
 dependencies = [
  "bitflags",
  "log",

@@ -65,7 +65,7 @@ use core::ptr::write_volatile;
 
 use crate::mutex::Mutex;
 
-use super::{BlockDevice, DEVICE, DEVICE1};
+use super::{BlockDevice, DEVICE};
 
 // config pci
 pub fn config_pci(){

@@ -5,7 +5,7 @@ use lazy_static::lazy_static;
 use virtio_drivers::{Hal, MmioTransport, PhysAddr, VirtAddr, VirtIOBlk, VirtIOHeader};
 use crate::mutex::Mutex;
 
-use super::{DEVICE, BlockDevice, DEVICE1};
+use super::{DEVICE, BlockDevice};
 
 extern "C" {
     fn end();

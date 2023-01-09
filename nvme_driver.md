@@ -289,6 +289,51 @@ async number: 42
 Hello WOrld!
 ```
 
+### step 6 then try to list files
+
+```rust
+let fs = fatfs::FileSystem::new(c, fatfs::FsOptions::new()).expect("open fs failed");
+let mut cursor =fs.root_dir();
+
+for file in cursor.iter() {
+    if let Ok(file) = file {
+        println!("{:>2$}├──{}", "", file.file_name(), 0);
+    }
+}
+```
+
+**but get some error**, the data between two reads is different. After communicating with author, we find the solution.
+**It should use a new buffer every time it reads.**
+
+### step 7 Run new Test
+
+```plain
+程序大小为: 216 kb  堆大小: 128 kb  代码段: 52 kb
+├──busybox
+├──busybox_cmd.txt
+├──busybox_testcode.sh
+├──date.lua
+├──file_io.lua
+├──lmbench_all
+├──lmbench_testcode.sh
+├──lua
+├──lua_testcode.sh
+├──max_min.lua
+├──random.lua
+├──remove.lua
+├──round_num.lua
+├──sin30.lua
+├──sort.lua
+├──strings.lua
+├──test.sh
+├──var
+├──byte-test.sh
+async number: 42
+async number: 42
+Hello WOrld!
+rm nvme.img
+```
+
 ## try to use it in byteos
 
 Follow the logic above. If I want to use nvme with byteos. I just need to adjust the initialization code and change the read and write code from virtio-blk to nvme.

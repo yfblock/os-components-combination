@@ -54,35 +54,17 @@ impl fatfs::Read for DiskCursor {
         // 防止读取较多数据时超出限制
         // 读取所有的数据的功能交给 read_exact 来实现
 
-        println!("read: buf_size: {}", buf.len());
-
         // 获取硬盘设备读取器（驱动？）
         let mut block_device = unsafe { DEVICE.get().unwrap() }.lock();
 
         // 如果 start 不是 0 或者 len 不是 512
         let read_size = if self.offset != 0 || buf.len() < 512 {
-            let mut data = [0u8; 512];
+            // let mut data = [0u8; 512];
+            let mut data = vec![0u8; 512];
             block_device.read_block(self.sector as usize, &mut data);
 
             let start = self.offset;
             let end = (self.offset + buf.len()).min(512);
-
-            println!("sector: {}, start: {}, end: {}, data: \n{:?}", 
-                self.sector, 
-                start,
-                end,
-                &data[start..end]
-            );
-            if self.sector == 0 && start == 510 && end == 512 {
-                println!("{:?}", &data);
-            }
-
-            if self.sector == 0 && start == 0 {
-                println!("{:?}", &data);
-                block_device.read_block(self.sector as usize + 1, &mut data);
-                println!("{:?}", &data);
-                shutdown();
-            }
 
             buf.copy_from_slice(&data[start..end]);
             end-start
@@ -107,7 +89,7 @@ impl fatfs::Write for DiskCursor {
 
         // 如果 start 不是 0 或者 len 不是 512
         let write_size = if self.offset != 0 || buf.len() < 512 {
-            let mut data = [0u8; 512];
+            let mut data = vec![0u8; 512];
             block_device.read_block(self.sector as usize, &mut data);
 
             let start = self.offset;
@@ -152,15 +134,6 @@ impl fatfs::Seek for DiskCursor {
 
 type Dir<'a> = fatfs::Dir<'a, DiskCursor, NullTimeProvider, LossyOemCpConverter>;
 
-fn show_files(dir: Dir, space: usize) {
-    println!("show files");
-    for file in dir.iter() {
-        // if let Ok(file) = file {
-        //     println!("{}", file.file_name());
-        // }
-    }
-}
-
 pub fn ls_dir(path: &str) {
     let c = DiskCursor {
         sector: 0,
@@ -169,10 +142,15 @@ pub fn ls_dir(path: &str) {
 
     // 获取文件
     let fs = fatfs::FileSystem::new(c, fatfs::FsOptions::new()).expect("open fs fai");
-    println!("Hello");
     let mut cursor =fs.root_dir();
-    show_files(cursor, 0);
 
+    for file in cursor.iter() {
+        if let Ok(file) = file {
+            println!("{:>2$}├──{}", "", file.file_name(), 0);
+            // info!("{:>2$}├──{}", "", sub_node.get_filename(), space);
+            // info!("{:>2$}└──{}", "", sub_node.get_filename(), space);
+        }
+    }
     // let mut cursor = fs.root_dir();
     // let mut file;
     // if let Ok(file1) = cursor.open_file("test4.txt") {

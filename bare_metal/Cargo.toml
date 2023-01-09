@@ -24,5 +24,5 @@ crossbeam-queue = { version = "0.3.8", default-features = false, features = ["al
 conquer-once = { version = "0.3.2", default-features = false }
 
 [patch.crates-io]
-# fatfs = { git = "https://github.com/rafalh/rust-fatfs" }
-fatfs = { path = "./rust-fatfs" }
+fatfs = { git = "https://github.com/rafalh/rust-fatfs" }
+# fatfs = { path = "./rust-fatfs" }

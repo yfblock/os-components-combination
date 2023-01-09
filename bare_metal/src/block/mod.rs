@@ -24,8 +24,7 @@ pub trait BlockDevice {
 
 pub static mut DEVICE: Once<Mutex<Box<dyn BlockDevice>>> = Once::new();
 
-pub static mut DEVICE1: Once<Mutex<Box<dyn BlockDevice>>> = Once::new();
-
+// pub static mut DEVICE1: Once<Mutex<Box<dyn BlockDevice>>> = Once::new();
 
 pub fn init() {
     // virtio::init();
@@ -44,21 +43,4 @@ pub fn init() {
 
     //     assert_eq!(arr, arr1);
     // }
-    let mut arr = [0u8; 512];
-    let mut arr1 = [0u8; 512];
-    let mut device = unsafe { DEVICE.get() }.unwrap().lock();
-
-    device.read_block(0, &mut arr);
-    println!("{:?}", &arr[0..]);
-    device.read_block(1, &mut arr);
-    println!("{:?}", &arr[0..]);
-    // println!("start compare");
-    // for i in 0..1000 {
-    //     arr1 = arr;
-    //     device.read_block(0, &mut arr);
-    //     assert_eq!(arr, arr1);
-    //     // println!("{:?}", arr);
-    // }
-    // println!("end compare");
-    // shutdown();
 }

@@ -382,3 +382,72 @@ nvme_driver = { path = "../nvme_driver" }
 It took a long time to adjust the garbage code I wrote before
 
 > finally pass! 🎉🎉🎉
+
+## try to use nvme_drvier with rCore-Tutorial-V3
+
+### step 1 Download source code & test
+
+> Environment:
+
+__host os:__ manjaro
+__platform:__ qemu-riscv64 7.2.0
+
+There is no doubt that something happened. 
+
+### step 2 fix
+
+The first problem is booting. rCore-Tutorial-V3 fails to start with qemu 7.2.0. Modifying the makefile can make it boot normally.
+
+```makefile
+# original
+# run-inner: build
+# 	@qemu-system-riscv64 \
+# 		-machine virt \
+# 		-nographic \
+# 		-bios $(BOOTLOADER) \
+# 		-device loader,file=$(KERNEL_BIN),addr=$(KERNEL_ENTRY_PA) \
+# 		-drive file=$(FS_IMG),if=none,format=raw,id=x0 \
+#         -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
+
+# now
+run-inner: build
+	@qemu-system-riscv64 \
+		-machine virt \
+		-nographic \
+		-device loader,file=$(KERNEL_BIN),addr=$(KERNEL_ENTRY_PA) \
+		-kernel $(KERNEL_BIN) \
+		-drive file=$(FS_IMG),if=none,format=raw,id=x0 \
+        -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0
+```
+
+Notwithstanding its boot, some errors occurred. Unable to get input characters normally.
+
+Modify the `os/src/fs/stdio.rs` to fix it.
+
+```rust
+// original
+// loop {
+//     c = console_getchar();
+//     if c == 0 {
+//         suspend_current_and_run_next();
+//         continue;
+//     } else {
+//         break;
+//     }
+// }
+
+// now
+loop {
+    c = console_getchar();
+    if c == 0 || c == usize::MAX {
+        suspend_current_and_run_next();
+        continue;
+    } else {
+        break;
+    }
+}
+```
+
+After communicating with @ydrMaster, We found that it may be the writing problem of the rCore-Tutorial-V3.
+
+### step 3 

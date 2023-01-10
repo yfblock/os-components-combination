@@ -16,10 +16,12 @@ mod context;
 use crate::config::{TRAMPOLINE, TRAP_CONTEXT};
 use crate::syscall::syscall;
 use crate::task::{
-    current_trap_cx, current_user_token, exit_current_and_run_next, suspend_current_and_run_next,
+    current_trap_cx, current_user_token, exit_current_and_run_next, suspend_current_and_run_next, TaskContext,
 };
 use crate::timer::set_next_trigger;
 use core::arch::{asm, global_asm};
+use riscv::register::scause::Scause;
+use riscv::register::sstatus;
 use riscv::register::{
     mtvec::TrapMode,
     scause::{self, Exception, Interrupt, Trap},
@@ -33,8 +35,13 @@ pub fn init() {
 }
 
 fn set_kernel_trap_entry() {
+
+    extern "C" {
+        fn __kernel_trap();
+    }
+
     unsafe {
-        stvec::write(trap_from_kernel as usize, TrapMode::Direct);
+        stvec::write(__kernel_trap as usize, TrapMode::Direct);
     }
 }
 
@@ -131,9 +138,14 @@ pub fn trap_return() -> ! {
 #[no_mangle]
 /// Unimplement: traps/interrupts/exceptions from kernel mode
 /// Todo: Chapter 9: I/O device
-pub fn trap_from_kernel() -> ! {
+pub fn trap_from_kernel(context: &mut TrapContext, scause: Scause, stval: usize) {
     use riscv::register::sepc;
-    println!("stval = {:#x}, sepc = {:#x}", stval::read(), sepc::read());
+    println!("stval = {:#x}, sepc = {:#x}, scause = {:?}", stval, sepc::read(), scause.cause());
+    match scause.cause() {
+        Trap::Exception(Exception::Breakpoint) => context.sepc += 2,
+        _ => {}
+    };
+
     panic!("a trap {:?} from kernel!", scause::read().cause());
 }
 

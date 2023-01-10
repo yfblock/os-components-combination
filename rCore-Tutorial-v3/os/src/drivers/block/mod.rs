@@ -1,6 +1,8 @@
 mod virtio_blk;
+mod nvme;
 
-pub use virtio_blk::VirtIOBlock;
+// pub use virtio_blk::VirtIOBlock;
+pub use nvme::VirtIOBlock;
 
 use crate::board::BlockDeviceImpl;
 use alloc::sync::Arc;

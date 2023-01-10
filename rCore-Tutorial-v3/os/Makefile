@@ -67,6 +67,15 @@ disasm-vim: kernel
 
 run: run-inner
 
+run-nvme: build
+	@qemu-system-riscv64 \
+		-machine virt \
+		-nographic \
+		-device loader,file=$(KERNEL_BIN),addr=$(KERNEL_ENTRY_PA) \
+		-kernel $(KERNEL_BIN) \
+		-drive file=$(FS_IMG),if=none,id=nvm \
+		-device nvme,serial=deadbeef,drive=nvm 
+
 # run-inner: build
 # 	@qemu-system-riscv64 \
 # 		-machine virt \

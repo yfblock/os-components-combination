@@ -14,6 +14,7 @@ bitflags = "1.2.1"
 xmas-elf = "0.7.0"
 virtio-drivers = { git = "https://github.com/rcore-os/virtio-drivers", rev = "4ee80e5" }
 easy-fs = { path = "../easy-fs" }
+nvme_driver = { path = "../../nvme_driver" }
 
 [profile.release]
 debug = true

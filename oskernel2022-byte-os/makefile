@@ -76,7 +76,6 @@ run: qemu
 	@cp fs-origin.img fs.img
 	@qemu-system-riscv64 \
             -machine virt \
-            -bios $(BOOTLOADER) \
             -device loader,file=$(BIN_FILE),addr=0x80200000 \
 			-drive file=$(FS_IMG),if=none,format=raw,id=x0 \
         	-device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0 \
@@ -90,18 +89,17 @@ run-nvme: qemu
 	@cp fs-origin.img nvme.img
 	@qemu-system-riscv64 \
             -machine virt \
-            -bios $(BOOTLOADER) \
 			-drive file=nvme.img,if=none,id=nvm \
 			-device nvme,serial=deadbeef,drive=nvm \
 			-kernel $(BIN_FILE) \
 			-nographic \
-			-smp 4 -m 128m
+			-smp 1 -m 128m
 	@rm nvme.img
 
 debug: qemu
 	@cp fs-origin.img fs.img
 	@tmux new-session -d \
-	"qemu-system-riscv64 -machine virt -nographic -bios $(BOOTLOADER) -drive file=$(FS_IMG),if=none,format=raw,id=x0 -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0 -device loader,file=$(BIN_FILE),addr=0x80200000 -s -S && echo '按任意键继续' && read -n 1" && \
+	"qemu-system-riscv64 -machine virt -nographic -drive file=$(FS_IMG),if=none,format=raw,id=x0 -device virtio-blk-device,drive=x0,bus=virtio-mmio-bus.0 -kernel $(BIN_FILE) -s -S && echo '按任意键继续' && read -n 1" && \
 	tmux split-window -h "riscv64-elf-gdb -ex 'file $(DEBUG_FILE)' -ex 'set arch riscv:rv64' -ex 'target remote localhost:1234'" && \
 	tmux -2 attach-session -d
 	@rm fs.img

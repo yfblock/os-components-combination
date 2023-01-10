@@ -11,11 +11,11 @@ impl DmaAllocator for DmaAllocatorImpl {
     fn dma_alloc(size: usize) -> usize{
         // 申请内存
         println!("alloc memeory: {}", size);
-        PAGE_ALLOCATOR.lock().alloc_more(size / 0x1000).expect("alloc error").into()
+        PAGE_ALLOCATOR.lock().alloc_more(size / 0x1000).expect("alloc error").to_addr().into()
     }
 
     fn dma_dealloc(addr: usize, size: usize) -> usize{
-        PAGE_ALLOCATOR.lock().dealloc_more(PhysPageNum::from(addr), size / 0x1000);
+        PAGE_ALLOCATOR.lock().dealloc_more(PhysPageNum::from(addr / 0x1000), size / 0x1000);
         0
     }
 
@@ -79,7 +79,7 @@ pub fn config_pci(){
 pub fn init() {
     info!("初始化nvme pci");
     // 初始化 pci
-    // config_pci();
+    config_pci();
 
     // 创建存储设备
     let device = Box::new(VirtIOBlock(

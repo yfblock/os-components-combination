@@ -12,6 +12,7 @@ SECTIONS
     .text : {
         *(.text.entry)
         *(.text .text.*)
+        *(.text.trap)
     }
 
     . = ALIGN(4K);

@@ -61,7 +61,7 @@ pub fn start_tasks() {
         // TODO: 判断是否存在等待中的任务 如果存在就切换任务
         let task = task_scheduler.queue[0].clone();
         
-        warn!("执行pid: {}   tid: {}   tasks len: {}", task.pid, task.tid, self.queue.len());
+        // warn!("执行pid: {}   tid: {}   tasks len: {}", task.pid, task.tid, self.queue.len());
         task.run();
         catch(task);
     }

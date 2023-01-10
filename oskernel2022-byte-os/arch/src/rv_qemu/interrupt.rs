@@ -1,71 +1,127 @@
-use core::arch::asm;
+use core::arch::{asm, global_asm};
 
-#[naked]
-#[no_mangle]
-pub unsafe extern "C" fn kernelvec() {
-    asm!(r"
-    .altmacro
-    .set    REG_SIZE, 8
-    .set    CONTEXT_SIZE, 34
-
-    .macro SAVE_K reg, offset
-        sd  \reg, \offset*8(sp)
-    .endm
-    
-    .macro SAVE_K_N n
-        SAVE_K  x\n, \n
-    .endm
-    
-    .macro LOAD_K reg, offset
-        ld  \reg, \offset*8(sp)
-    .endm
-    
-    .macro LOAD_K_N n
-        LOAD_K  x\n, \n
-    .endm
-
-    .section .text
-    .align 2
-    addi    sp, sp, CONTEXT_SIZE*-8
-
-    SAVE_K    x1, 1
-    addi    x1, sp, 34*8
-    SAVE_K    x1, 2
-    .set    n, 3
-    .rept   29
-        SAVE_K_N  %n
-        .set    n, n + 1
-    .endr
-    csrr    t0, sstatus
-    csrr    t1, sepc
-    SAVE_K    t0, 32
-    SAVE_K    t1, 33
-
-    add a0, x0, sp
-    csrr a1, scause
-    csrr a2, stval
-
-    call kernel_callback
-
-    LOAD_K    s1, 32
-    LOAD_K    s2, 33
-    csrw    sstatus, s1
-    csrw    sepc, s2
-
-    LOAD_K    x1, 1
-
-    .set    n, 3
-    .rept   29
-        LOAD_K_N  %n
-        .set    n, n + 1
-    .endr
-
-    LOAD_K    x2, 2
-    sret
-    ", 
-    
-    options(noreturn))
+extern "C" {
+    pub fn kernel_trap();
 }
+
+global_asm!(include_str!("interrupt.asm"));
+
+
+// #[naked]
+// #[no_mangle]
+// pub unsafe extern "C" fn kernel_trap() {
+//     asm!(r"
+//     .altmacro
+//     .set    REG_SIZE, 8
+//     .set    CONTEXT_SIZE, 34
+
+//     .macro SAVE_K reg, offset
+//         sd  \reg, \offset*8(sp)
+//     .endm
+    
+//     .macro SAVE_K_N n
+//         SAVE_K  x\n, \n
+//     .endm
+    
+//     .macro LOAD_K reg, offset
+//         ld  \reg, \offset*8(sp)
+//     .endm
+    
+//     .macro LOAD_K_N n
+//         LOAD_K  x\n, \n
+//     .endm
+
+//     addi    sp, sp, CONTEXT_SIZE*-8
+
+//     SAVE_K    x1, 1
+//     addi    x1, sp, 34*8
+//     SAVE_K    x1, 2
+//     .set    n, 3
+//     .rept   29
+//         SAVE_K_N  %n
+//         .set    n, n + 1
+//     .endr
+//     csrr    t0, sstatus
+//     csrr    t1, sepc
+//     SAVE_K    t0, 32
+//     SAVE_K    t1, 33
+
+//     add a0, x0, sp
+//     csrr a1, scause
+//     csrr a2, stval
+
+//     call kernel_callback
+
+//     LOAD_K    s1, 32
+//     LOAD_K    s2, 33
+//     csrw    sstatus, s1
+//     csrw    sepc, s2
+
+//     LOAD_K    x1, 1
+
+//     .set    n, 3
+//     .rept   29
+//         LOAD_K_N  %n
+//         .set    n, n + 1
+//     .endr
+
+//     LOAD_K    x2, 2
+//     sret
+//     ", 
+    
+//     options(noreturn))
+// }
+
+// #[naked]
+// #[no_mangle]
+// pub unsafe extern "C" fn kernel_trap() {
+//     asm!(r"
+//     .altmacro
+//     .set    REG_SIZE, 8
+//     .set    CONTEXT_SIZE, 34
+//     .macro SAVE_K reg, offset
+//         sd  \reg, \offset*8(sp)
+//     .endm
+//     .macro SAVE_K_N n
+//         SAVE_K  x\n, \n
+//     .endm
+//     .macro LOAD_K reg, offset
+//         ld  \reg, \offset*8(sp)
+//     .endm
+//     .macro LOAD_K_N n
+//         LOAD_K  x\n, \n
+//     .endm
+
+//     .section .text
+//     .align 2
+    
+//     .option push
+//     .option pic
+//     .option nopic
+
+//     addi    x1, sp, 2*8
+//     csrr    t0, sstatus
+//     csrr    t1, sepc
+//     SAVE_K    t0, 32
+//     SAVE_K    t1, 33
+
+//     add a0, x0, sp
+//     csrr a1, scause
+//     csrr a2, stval
+
+//     call kernel_callback
+
+//     LOAD_K    s1, 32
+//     LOAD_K    s2, 33
+//     csrw    sstatus, s1
+//     csrw    sepc, s2
+//     addi    x1, sp, -2*8
+//     .option pop
+//     sret
+//     ", 
+    
+//     options(noreturn))
+// }
 
 #[naked]
 #[no_mangle]
@@ -172,7 +228,7 @@ pub unsafe extern "C" fn __task_restore() {
         .set n, n+1
     .endr
 
-    la a0, kernelvec
+    la a0, kernel_trap
     csrw stvec, a0
     
     addi sp, sp, 32*8

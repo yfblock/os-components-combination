@@ -14,7 +14,7 @@ extern crate output;
 extern crate alloc;
 mod virtio_impl;
 
-use core::arch::asm;
+use core::arch::{asm, global_asm};
 
 use alloc::rc::Rc;
 use kernel::{memory, interrupt, device, fs};
@@ -58,11 +58,6 @@ pub extern "C" fn rust_main(hart_id: usize, device_tree_p_addr: usize) -> ! {
 
     unsafe {
         sstatus::set_fs(sstatus::FS::Dirty);
-
-        // 开启SUM位 让内核可以访问用户空间  踩坑：  
-        // only in qemu. eg: qemu is riscv 1.10    k210 is riscv 1.9.1  
-        // in 1.10 is SUM but in 1.9.1 is PUM which is the opposite meaning with SUM
-        #[cfg(not(feature = "board_k210"))]
         sstatus::set_sum();
     }
 
@@ -145,4 +140,3 @@ pub fn print_file_tree(node: Rc<INode>) {
     info!("{}", node.get_pwd());
     print_file_tree_back(node, 0);
 }
-

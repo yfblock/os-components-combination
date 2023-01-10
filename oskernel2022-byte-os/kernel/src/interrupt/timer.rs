@@ -1,6 +1,6 @@
 use crate::sync::mutex::Mutex;
 use arch::{sbi::set_timer, CLOCK_FREQ};
-use riscv::register::{sie, time};
+use riscv::register::{sie, time, sstatus};
 
 
 const CHANGE_TASK_TICKS: usize = 10;

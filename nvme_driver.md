@@ -372,5 +372,13 @@ add run command to Makefile
 > add dependency to Cargo.toml
 
 ```toml
-
+nvme_driver = { path = "../nvme_driver" }
 ```
+
+> add block folder to contains `nvme.rs` and `block.rs`
+
+### step 5 Takes a long time to test the os
+
+It took a long time to adjust the garbage code I wrote before
+
+> finally pass! 🎉🎉🎉

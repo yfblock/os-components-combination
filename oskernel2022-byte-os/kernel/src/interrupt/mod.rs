@@ -1,7 +1,7 @@
 pub mod timer;
 
 use core::arch::asm;
-use arch::kernelvec;
+use arch::kernel_trap;
 use riscv::register::scause::Trap;
 use riscv::register::scause::Exception;
 use riscv::register::scause::Interrupt;
@@ -69,7 +69,7 @@ fn handle_page_fault(_context: &mut Context, _stval: usize) {
 // 内核中断回调
 #[no_mangle]
 fn kernel_callback(context: &mut Context, scause: Scause, stval: usize) -> usize {
-    warn!("内核态中断发生: {:#x}  stval {:#x}  sepc: {:#x}", scause.bits(), stval,  context.sepc);
+    warn!("内核态中断发生: {:?}, {:#x}  stval {:#x}  sepc: {:#x}", scause.cause(), scause.bits(), stval,  context.sepc);
     match scause.cause(){
         // 中断异常
         Trap::Exception(Exception::Breakpoint) => breakpoint(context),
@@ -96,10 +96,10 @@ fn kernel_callback(context: &mut Context, scause: Scause, stval: usize) -> usize
 // 设置中断
 pub fn init() {
     // 输出内核信息
-    info!("kernelvec addr: {:#x}", kernelvec as usize);
+    info!("kernel_trap addr: {:#x}", kernel_trap as usize);
 
     unsafe {
-        asm!("csrw stvec, a0", in("a0") kernelvec as usize);
+        asm!("csrw stvec, a0", in("a0") kernel_trap as usize);
     }
 
     // 初始化定时器

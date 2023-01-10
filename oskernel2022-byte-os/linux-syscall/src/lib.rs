@@ -47,6 +47,7 @@ type SyscallTask = Rc<Task>;
 
 // 系统调用
 pub fn sys_call(task: SyscallTask, call_type: usize, args: [usize; 7]) -> Result<(), RuntimeError> {
+    warn!("syscal number: {}", call_type);
     // 匹配系统调用 a7(x17) 作为调用号
     match call_type {
         // 获取文件路径
@@ -276,7 +277,7 @@ pub fn interrupt(task: SyscallTask) -> Result<(), RuntimeError> {
     let stval = stval::read();
     let mut task_inner = task.inner.borrow_mut();
     let context = &mut task_inner.context;
-    // warn!("中断发生: {:#x}, 地址: {:#x}", scause.bits(), context.sepc);
+    warn!("中断发生: {:?}, {:#x}, 地址: {:#x}", scause.cause(), scause.bits(), context.sepc);
     // 更新TICKS
     set_last_ticks();
 
@@ -316,7 +317,6 @@ pub fn interrupt(task: SyscallTask) -> Result<(), RuntimeError> {
             drop(context);
             drop(task_inner);
             
-
             sys_call(task, call_type, args)?;
         },
         // 加载页面错误
@@ -329,7 +329,7 @@ pub fn interrupt(task: SyscallTask) -> Result<(), RuntimeError> {
         }
         Trap::Exception(Exception::IllegalInstruction) => {
             warn!("中断 {:#x} 地址 {:#x} stval: {:#x}", scause.bits(), context.sepc, stval);
-            // panic!("指令页错误");
+            panic!("指令页错误");
 
         }
         Trap::Exception(Exception::InstructionPageFault) => {

@@ -104,8 +104,8 @@ impl fatfs::Read for DiskCursor {
         let block_device = unsafe { &mut BLK_CONTROL[self.disk_index] };
 
         let mut i = 0;
-        let mut data = [0u8; 512];
         while i < buf.len() {
+            let mut data = vec![0u8; 512];
             block_device.read_block(self.sector as usize, &mut data);
             let data = &data[self.offset..];
             if data.len() == 0 { break; }

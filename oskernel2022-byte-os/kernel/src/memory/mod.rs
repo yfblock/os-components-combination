@@ -20,6 +20,7 @@ pub fn init() {
     unsafe {
         asm!("csrw sscratch, a0", in("a0") kernel_stack_top);
     }
+    
     // 初始化堆 便于变量指针分配
     heap::init();
 

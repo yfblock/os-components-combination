@@ -53,7 +53,7 @@ impl MemoryPageAllocator {
         Err(RuntimeError::NoEnoughPage)
     }
 
-    // 取消分配页
+    // 回收分配页
     #[allow(unused)]
     pub fn dealloc(&mut self, page: PhysPageNum) {
         let index = usize::from(page) - (self.start >> 12); 

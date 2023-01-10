@@ -450,4 +450,46 @@ loop {
 
 After communicating with @ydrMaster, We found that it may be the writing problem of the rCore-Tutorial-V3.
 
-### step 3 
+### step 3 Add run command to makefile
+
+```makefile
+run-nvme: build
+	@qemu-system-riscv64 \
+		-machine virt \
+		-nographic \
+		-device loader,file=$(KERNEL_BIN),addr=$(KERNEL_ENTRY_PA) \
+		-kernel $(KERNEL_BIN) \
+		-drive file=$(FS_IMG),if=none,id=nvm \
+		-device nvme,serial=deadbeef,drive=nvm 
+```
+
+### step 4 Map pci and nvme memory
+
+> os/src/mm/memory_set.rs MemorySet::new_kernel
+
+```rust
+println!("mapping pci memory");
+memory_set.push(
+    MapArea::new(
+        0x30000000.into(),
+        0x30010000.into(),
+        MapType::Identical,
+        MapPermission::R | MapPermission::W,
+    ),
+    None,
+);
+println!("mapping nvme memory");
+memory_set.push(
+    MapArea::new(
+        0x40000000.into(),
+        0x40010000.into(),
+        MapType::Identical,
+        MapPermission::R | MapPermission::W,
+    ),
+    None,
+);
+```
+
+### step 5 Run test
+
+> pass 🎉🎉🎉

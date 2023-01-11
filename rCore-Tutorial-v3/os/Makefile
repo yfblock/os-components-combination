@@ -46,6 +46,18 @@ fs-img: $(APPS)
 	@rm -f $(FS_IMG)
 	@cd ../easy-fs-fuse && cargo run --release -- -s ../user/src/bin/ -t ../user/target/riscv64gc-unknown-none-elf/release/
 
+nvme-img:
+	@rm -f nvme.img
+	@dd if=/dev/zero of=nvme.img count=40 bs=1M	# 40M
+	@mkfs.vfat nvme.img -F 32
+
+	@mkdir -p mount
+	@sudo mount nvme.img ./mount
+
+	@sudo cp -r ../user/target/riscv64gc-unknown-none-elf/release/*.bin ./mount
+	@find ./mount -name "*.bin" | awk -F "./mount/" '{print $2}' | awk -F "." '{print $1}' | xargs -i -t sudo mv ./mount/{}.bin ./mount/{}
+	@sudo umount ./mount
+
 $(APPS):
 
 kernel:
@@ -68,12 +80,13 @@ disasm-vim: kernel
 run: run-inner
 
 run-nvme: build
+# make nvme-img
 	@qemu-system-riscv64 \
 		-machine virt \
 		-nographic \
 		-device loader,file=$(KERNEL_BIN),addr=$(KERNEL_ENTRY_PA) \
 		-kernel $(KERNEL_BIN) \
-		-drive file=$(FS_IMG),if=none,id=nvm \
+		-drive file=nvme.img,if=none,id=nvm \
 		-device nvme,serial=deadbeef,drive=nvm 
 
 # run-inner: build

@@ -20,3 +20,6 @@ nvme_driver = { path = "../../nvme_driver" }
 
 [profile.release]
 debug = true
+
+[patch.crates-io]
+fatfs = { git = "https://github.com/rafalh/rust-fatfs" }

@@ -13,7 +13,6 @@ panic = "abort"
 
 [dependencies]
 nvme_driver = { path = "../nvme_driver" }
-fatfs = { version = "0.4.0", default-features = false, features = ["alloc", "lfn", "log_level_trace", "unicode"] }
 buddy_system_allocator = "0.9.0"
 virtio-drivers = "0.1.0"
 lazy_static = { version = "1.4", features = ["spin_no_std"] }
@@ -22,6 +21,8 @@ futures-util = { version = "0.3.25", default-features = false, features = ["allo
 
 crossbeam-queue = { version = "0.3.8", default-features = false, features = ["alloc"] }
 conquer-once = { version = "0.3.2", default-features = false }
+
+fatfs = { version = "0.4.0", default-features = false, features = ["alloc", "lfn", "log_level_trace", "unicode"] }
 
 [patch.crates-io]
 fatfs = { git = "https://github.com/rafalh/rust-fatfs" }

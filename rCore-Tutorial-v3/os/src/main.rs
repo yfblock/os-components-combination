@@ -50,6 +50,8 @@ pub mod trap;
 
 use core::arch::{global_asm, asm};
 
+use riscv::asm::ebreak;
+
 global_asm!(include_str!("entry.asm"));
 /// clear BSS segment
 fn clear_bss() {

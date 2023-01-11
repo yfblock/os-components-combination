@@ -51,3 +51,90 @@ easy-fs = { path = "../easy-fatfs", package = "easy-fatfs" }
 ```
 
 rename `easy-fatfs` to `easy-fs`.
+
+### add rust-fatfs to cargo.toml
+
+```toml
+fatfs = { version = "0.4.0", default-features = false, features = ["alloc", "lfn", "log_level_trace", "unicode"] }
+
+[patch.crates-io]
+fatfs = { git = "https://github.com/rafalh/rust-fatfs" }
+```
+
+### Analyze easy-fs
+
+The following are the minimum requirements for successful compilation.
+
+> efs.rs
+
+```rust
+use crate::{BLOCK_SZ, BlockDevice, Inode};
+use alloc::sync::Arc;
+use spin::Mutex;
+///An easy file system on block
+pub struct EasyFileSystem {}
+
+type DataBlock = [u8; BLOCK_SZ];
+/// An easy fs over a block device
+impl EasyFileSystem {
+    /// Open a block device as a filesystem
+    pub fn open(block_device: Arc<dyn BlockDevice>) -> Arc<Mutex<Self>> {
+        todo!()
+    }
+    /// Get the root inode of the filesystem
+    pub fn root_inode(efs: &Arc<Mutex<Self>>) -> Inode {
+        todo!()
+    }
+}
+```
+
+> vfs.rs
+
+```rust
+use alloc::string::String;
+use alloc::sync::Arc;
+use alloc::vec::Vec;
+use spin::{Mutex, MutexGuard};
+
+use crate::{EasyFileSystem, BlockDevice};
+/// Virtual filesystem layer over easy-fs
+pub struct Inode {
+    block_id: usize,
+    block_offset: usize,
+    fs: Arc<Mutex<EasyFileSystem>>,
+    block_device: Arc<dyn BlockDevice>,
+}
+
+impl Inode {
+    /// Find inode under current inode by name
+    pub fn find(&self, name: &str) -> Option<Arc<Inode>> {
+        todo!()
+    }
+    /// Create inode under current inode by name
+    pub fn create(&self, name: &str) -> Option<Arc<Inode>> {
+        todo!()
+        // release efs lock automatically by compiler
+    }
+    /// List inodes under current inode
+    pub fn ls(&self) -> Vec<String> {
+        todo!()
+    }
+    /// Read data from current inode
+    pub fn read_at(&self, offset: usize, buf: &mut [u8]) -> usize {
+        todo!()
+    }
+    /// Write data to current inode
+    pub fn write_at(&self, offset: usize, buf: &[u8]) -> usize {
+        todo!()
+    }
+    /// Clear the data in current inode
+    pub fn clear(&self) {
+        todo!()
+    }
+}
+
+```
+
+### Finally (to be continued)
+
+> pass
